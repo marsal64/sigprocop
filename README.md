@@ -3,12 +3,12 @@ Machine learning add-on for Safibra OptiGuard optical measuring system.
 
 
 # Installation log
-**Centos 7 installation**  
-**Create new user ml**
-sudo adduser ml  
-sudo usermod -aG wheel ml  
-sudo passwd ml                  #      f............t  
-_relogin as ml_  
+**Centos 7 installation example**  
+**Create new user spop**
+sudo adduser spop  
+sudo usermod -aG wheel spop  
+sudo passwd spop                  #      f............t  
+_relogin as spop_  
   
 **Create directory Downloads**  
 mkdir -p ~/Downloads  
@@ -26,14 +26,11 @@ _Exit and relogin as ml_
 conda update conda  
 conda update anaconda  
   
-**Create python environment for (optiguard)ml**  
-_note: spyder and pyqt is used for development only, do not install it for runtime installations_  
-conda create -n ml -c conda-forge pip pypy pandas scikit-learn spyder pyqt  
-  
-_note: because of pypy, we stay with python 3.6 (as of June 6, 2020)_  
+**Create python environment for SigProcOpenPython**  
+conda create -n spop -c conda-forge pip pandas scikit-learn python=3.8
   
 **Activate the environment ml**  
-conda activate ml  
+conda activate spop
   
 **Clone repository**  
 cd ~  
