@@ -1,0 +1,73 @@
+{
+  "name": "optiguardml",
+  "description": "configuration for ObjectSense_01",
+
+  "maxdblines": 10000,
+  "dbsectoerase": 60,
+  "dbmaintainsec": 60,
+  "maxdatabuf": 1000000,
+
+  "listen": {
+  "ip": "10.23.18.161",
+  "port": 5555
+},
+
+  "inputs": [
+        {"name": "ch1",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_01"
+        },
+        {"name": "ch2",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_02"
+        },
+        {"name": "ch3",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_03"
+        },
+        {"name": "ch4",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_04"
+        },
+        {"name": "ch5",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_05"
+        },
+        {"name": "ch6",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_06"
+        },
+        {"name": "ch7",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_07"
+        },
+        {"name": "ch8",
+         "fromdevice": "ProcessGuard_15",
+         "fromsensor": "os_08"
+        }
+  ],
+
+  "model_1": {
+    "modelfile": "models/model_mm.ml",
+    "modelname": "OptiGuardML model mm"
+},
+
+    "model_2": {
+    "modelfile": "models/model_offsetx_abs.ml",
+    "modelname": "OptiGuardML model offsetx_abs"
+},
+
+  "output_1":
+        {"ip": "10.23.19.15",
+         "port": 5555,
+         "device": "python",
+         "sensor": "result_01"
+        },
+
+  "output_2":
+        {"ip": "10.23.19.15",
+         "port": 5555,
+         "device": "python",
+         "sensor": "result_02"
+        }
+}

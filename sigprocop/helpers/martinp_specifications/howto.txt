@@ -1,0 +1,22 @@
+Ahoj Martine,
+v Pythonu žádný užitečný kód nemám. Jestě se zeptám Kuby, ale nemyslím si, že by něco měl. Můžu Ti poskytnou naší implementaci v C++. Zdrojáky jsem dal do přílohy. Není to moc zdokumentované, tak se klidně ozvi, když budeš potřebovat něco vysvětlit.
+Pro snadnější zorientování v kódu jsem dal dohromady pár poznámek.
+Přijímání do SigProcu:
+Třída NetServer (net_server.cpp).
+Jedna instance NetServer na SigProc.
+Přijímá data od všech odesílatelů. Počet odesílatelů není omezen.
+Funkce NetServer::Main() běží v samostatném vlákně.
+Odesílání ze SigProcu:
+Třída UplinkSender (uplink.cpp).
+Každý kanál (spojení mezí odesílatelem a příjemcem) ma vlastní instanci. Počet není omezen.
+Třída NetServerUplink (net_server_uplink.cpp) zastřešuje všechny instance UplinkSender.
+Funkce UplinkSender::Main() běží v každé instanci ve vlastním vlákně.
+
+Na ProcessGuardu_15 jsem připravil konfiguraci streaming_01, kterou můžeš použít na testování. Adresa je https://10.23.19.15:8888/, jméno a heslo jsou prázdné řetězce.
+V konfiguraci je modul generator, který opakovaně generuje sekvenci celých čísel od 0 do 10. Perioda generování je 1 sekunda. Generovaná data se zobrazují do grafu (modul graph_generator) a odesílají se ven ze SigProcu (modul output). Data přícházející zvenčí se přijímají modulem input a zobrazují se do grafu (modul graph_input).
+Konfigurace je vypnutá a před použitím je potřeba ji pustit. Po skončení práce s konfigurací je vhodné ji zase vypnout.
+V modulu output bude potřeba nastavit do parametru ip_address adresu tvého stroje, kam se budou data posílat. Volitelně je možné nastavit i parametry device a sensor. V modulu input bude potřeba nastavit parametry device a sensor, tak aby to sedělo s tím co odesíláš. Po změně parametrů je nutné konfiguraci restartovat, aby se změny aplikovaly. 
+Případně dej vědět a pomůžu Ti to nastavit.
+
+S pozdravem
+Martin
