@@ -1,8 +1,9 @@
 #####################################################
+#####################################################
 ###
-### OptiGuardML - Machine Learning part of Opti Guard
+### SigProcOpenPython - SigProc add on for user programming in python
 ###
-### OptiGuardML runner
+### SigProcOpenPython runner
 ###
 #####################################################
 
@@ -17,18 +18,17 @@ import sys
 import numpy as np
 import pandas as pd
 import collections
-import pickle
+import dill
 import struct
 
-from optiguardml.functionality import chksm, Packet, packetparse, inprocess
-
+from sigprocop.functionality import chksm, Packet, packetparse, inprocess
 
 ### parse command line arguments
-parser = argparse.ArgumentParser(description='OpgiGuartdML main runner')
+parser = argparse.ArgumentParser(description='SigProcOpenPython main runner')
 
-parser.add_argument('--paramfile', type=str, default='optiguardml.json', help='.json file with parameters.')
+parser.add_argument('--paramfile', type=str, default='sigprocop.json', help='.json file with parameters.')
 parser.add_argument('--debug', action='store_true', default=False, help='If present, runs in debug mode.')
-parser.add_argument('--rundir', type=str, default='', help='If present, does  cd to the given directory. If not present, it runs in the directory when the runogml.py script is present. ')
+parser.add_argument('--rundir', type=str, default='', help='If present, switches to the given directory. If not present, it runs in the directory where the sigprocoprun.py script is present. ')
 parser.add_argument('--nolog', action='store_true', default=False, help='If present, disables logging.')
 
 # development related only
@@ -115,18 +115,11 @@ F.logger.info("started")
 F.logger.info(f"parameters:\n{F}")
 
 
-### load the model 1 (mm)
+### load the function spop_predict
 try:
-    F.modelrun_1 = pickle.load(open(F.model_1['modelfile'], 'rb'))
+    F.spop_predict = dill.load(open(F.spop_predict_function['modelfile'], 'rb'))
 except Exception as e:
-    F.logger.error(f"cannot load model 1 from file '{F.model_1['modelfile']}', exiting. Exception:\n{e}")
-    sys.exit(1)
-
-### load the model 2 (offsetx_abs)
-try:
-    F.modelrun_2 = pickle.load(open(F.model_2['modelfile'], 'rb'))
-except Exception as e:
-    F.logger.error(f"cannot load model 2 from file '{F.model_2['modelfile']}', exiting. Exception:\n{e}")
+    F.logger.error(f"cannot load spop_predict function from file '{F.spop_predict_function['modelfile']}', exiting. Exception:\n{e}")
     sys.exit(1)
 
 
@@ -159,7 +152,7 @@ F.numinputs = F.iotr.index.size
 
 
 ### sockets initiation
-# lsock: listen as server to clients sending measurements data to optiguardml
+# lsock: listen as server to clients sending measurements data to SigProcOpenPython
 lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 try:
@@ -176,55 +169,36 @@ except Exception as e:
 lsock.setblocking(False)
 F.logger.info(f"listening on {F.listen['ip']}:{F.listen['port']}")
 
-# osock_1: connect as client to the server_1 which is waiting for outputs from optiguardml
-server_addr_1 = (F.output_1["ip"], F.output_1["port"])
-F.logger.info(f"connecting to server {F.output_1['ip']}:{F.output_1['port']}...")
-osock_1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# osock: connect as client to the server which is waiting for outputs from SigProcOpenPython
+server_addr = (F.output["ip"], F.output["port"])
+F.logger.info(f"connecting to server {F.output['ip']}:{F.output['port']}...")
+osock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # during reboot, may not have networking ready
 while True:
     try:
-        osock_1.connect(server_addr_1)
+        osock.connect(server_addr)
         break
     except Exception as e:
-        F.logger.warning(f'waiting for the connection 1 to {server_addr_1}')
+        F.logger.warning(f'waiting for the connection 1 to {server_addr}')
         time.sleep(3)
         pass
         
-osock_1.setblocking(False)
+osock.setblocking(False)
 # now connected, can change to nonblocking
-F.logger.info(f"connected to server {F.output_1['ip']}:{F.output_1['port']} to send output_1")
+F.logger.info(f"connected to server {F.output['ip']}:{F.output['port']} to send output")
 
-# osock_2: connect as client to the server_2 which is waiting for outputs from optiguardml offsetx_abs
-server_addr_2 = (F.output_2["ip"], F.output_2["port"])
-F.logger.info(f"connecting to server {F.output_2['ip']}:{F.output_2['port']}...")
-osock_2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-while True:
-    try:
-        osock_2.connect(server_addr_2)
-        break
-    except Exception as e:
-        F.logger.warning(f'waiting for the connection 2 to {server_addr_2}')
-        time.sleep(3)
-        pass
-
-osock_2.setblocking(False)
-# now connected, can change to nonblocking
-F.logger.info(f"connected to server {F.output_2['ip']}:{F.output_2['port']} to send output_2")
 
 
 # lists of sockets to read from
 inputs = [lsock]
 # lists of sockets to write to
-outputs = [osock_1] + [osock_2]
+outputs = [osock]
 
 # input queue
 F.inq = collections.deque()
 # output queue 1
-F.outq_1 = collections.deque()
-# output queue 2
-F.outq_2 = collections.deque()
+F.outq = collections.deque()
 
 # counter for erasing older rows in buffer
 F.buffermaintaintime = time.time()
@@ -333,69 +307,41 @@ while True:
     # If output message, put to output
     errout = False # error for sending to output flag
     for s in writable:
-        if s is osock_1 and F.outq_1:   # not empty
+        if s is osock and F.outq:   # not empty
             try:
-                next_msg = F.outq_1.pop()
-                #F.logger.debug(f"sending {repr(next_msg)} (output_1) to {s.getpeername()}")
-                osock_1.send(next_msg)
+                next_msg = F.outq.pop()
+                F.logger.debug(f"sending {repr(next_msg)} (output) to {s.getpeername()}")
+                osock.send(next_msg)
             except Exception as e:
-                F.logger.error(f"exception when sending message to output_1. Exception:\n{e}")
+                F.logger.error(f"exception when sending message to output. Exception:\n{e}")
                 errout = True
                 # will try next time
 
-        if s is osock_2 and F.outq_2:   # not empty
-            try:
-                next_msg = F.outq_2.pop()
-                #F.logger.debug(f"sending {repr(next_msg)} (output_2) to {s.getpeername()}")
-                osock_2.send(next_msg)
-            except Exception as e:
-                errout = True
-                F.logger.error(f"exception when sending message to output_2. Exception:\n{e}")
-                # will try next time
 
     # if errout, reconnect
     if errout:
         F.logger.warning("Trying to reconnect")
     
-        # osock_1: connect as client to the server_1 which is waiting for outputs from optiguardml
-        server_addr_1 = (F.output_1["ip"], F.output_1["port"])
-        F.logger.info(f"connecting to server {F.output_1['ip']}:{F.output_1['port']}...")
-        osock_1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # osock: connect as client to the server which is waiting for outputs from sigprocopenpython
+        server_addr = (F.output["ip"], F.output["port"])
+        F.logger.info(f"connecting to server {F.output['ip']}:{F.output['port']}...")
+        osock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # during reboot, may not have networking ready
         while True:
             try:
-                osock_1.connect(server_addr_1)
+                osock.connect(server_addr)
                 break
             except Exception as e:
-                F.logger.warning(f'waiting for the connection 1 to {server_addr_1}')
+                F.logger.warning(f'waiting for the connection 1 to {server_addr}')
                 time.sleep(3)
                 pass
                 
-        osock_1.setblocking(False)
+        osock.setblocking(False)
         # now connected, can change to nonblocking
-        F.logger.info(f"connected to server {F.output_1['ip']}:{F.output_1['port']} to send output_1")
+        F.logger.info(f"connected to server {F.output['ip']}:{F.output['port']} to send output")
 
-        # osock_2: connect as client to the server_2 which is waiting for outputs from optiguardml offsetx_abs
-        server_addr_2 = (F.output_2["ip"], F.output_2["port"])
-        F.logger.info(f"connecting to server {F.output_2['ip']}:{F.output_2['port']}...")
-        osock_2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        while True:
-            try:
-                osock_2.connect(server_addr_2)
-                break
-            except Exception as e:
-                F.logger.warning(f'waiting for the connection 2 to {server_addr_2}')
-                time.sleep(3)
-                pass
-
-        osock_2.setblocking(False)
-        # now connected, can change to nonblocking
-        F.logger.info(f"connected to server {F.output_2['ip']}:{F.output_2['port']} to send output_2")
-
-        # lists of sockets to write to
-        outputs = [osock_1] + [osock_2]
+        outputs = [osock]
    
 
     # Handle "exceptional conditions"

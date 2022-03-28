@@ -5,12 +5,9 @@ import numpy as np
 import pickle
 import os
 
-# go to desired directory
-os.chdir(os.path.join(os.path.expanduser('~'), 'optiguardml/models'))
-
 ### build dummy scikit model with 1 input and one output
-X = np.array([[1], [2], [3], [4]])
-y = np.array([[1], [2], [3], [4]])
+X = np.array([[1], [2]])
+y = np.array([[1], [2]])
 
 reg = LinearRegression().fit(X, y)
 

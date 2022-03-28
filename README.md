@@ -34,11 +34,11 @@ conda activate spop
   
 **Clone repository**  
 cd ~  
-git clone git@github.com:marsal64/optiguardml.git         _use appropriate github_  
+git clone git@github.com:marsal64/sigprocop.git         _use appropriate github_  
   
 **Put some helpers at the end .bashrc**  
-echo "conda activate ml" >> ~/.bashrc  
-echo "cd ~/optiguardml" >> ~/.bashrc  
+echo "conda activate spop" >> ~/.bashrc  
+echo "cd ~/sigprocop" >> ~/.bashrc  
 _exit and relogon_  
   
   

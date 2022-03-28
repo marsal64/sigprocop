@@ -175,25 +175,16 @@ def inprocess(deviceid, sensorid, values, F):
             try:
                 # run the values through the model
                 X = F.db.iloc[indrow, 2:].values.reshape(1, -1)
-                y_1 = F.modelrun_1.predict(X)[0]
-                y_2 = F.modelrun_2.predict(X)[0]
-                F.logger.debug(f"from input values {X}, the model calculated the output values {y_1} (mm) and {y_2} (offsetx_abs), sending to outputs")
+                y = F.spop_predict(X)
+                F.logger.debug(f"from input values {X}, the spop_predict function  calculated the output value {y}, sending to outputs")
 
-                # send to output_1
-                valout_1 = [(sec, ms, y_1)]
-                p = Packet(F.output_1['device'], F.output_1['sensor'], valout_1, 1)
+                # send to output
+                valout = [(sec, ms, y)]
+                p = Packet(F.output['device'], F.output['sensor'], valout, 1)
                 F.logger.debug(
-                    f"sending {len(p.message)} bytes output_1 packet deviceid={p.deviceid}, sensorid={p.sensorid}, values: {p.values}")
+                    f"sending {len(p.message)} bytes output packet deviceid={p.deviceid}, sensorid={p.sensorid}, values: {p.values}")
                 # put message to output queue
-                F.outq_1.appendleft(p.message)
-
-                # send to output_2
-                valout_2 = [(sec, ms, y_2)]
-                p = Packet(F.output_2['device'], F.output_2['sensor'], valout_2, 2)
-                F.logger.debug(
-                    f"sending {len(p.message)} bytes output_2 packet deviceid={p.deviceid}, sensorid={p.sensorid}, values: {p.values}")
-                # put message to output queue
-                F.outq_2.appendleft(p.message)
+                F.outq.appendleft(p.message)
 
                 # drop the row
                 F.db.drop(F.db.index[indrow], inplace=True)
