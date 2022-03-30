@@ -21,7 +21,7 @@
 
     "spop_predict_function": {
     "modelfile": "models/negate.spop_predict",
-    "modelname": "Add two values"
+    "modelname": "Negating received value"
 },
 
   "output":
