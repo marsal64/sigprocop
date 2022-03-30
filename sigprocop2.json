@@ -15,7 +15,7 @@
   "inputs": [
         {"name": "ch1",
          "fromdevice": "processguard_15",
-         "fromsensor": "sensor_01"
+         "fromsensor": "sensor_02"
         }
   ],
 
@@ -28,6 +28,6 @@
         {"ip": "10.23.19.15",
          "port": 5555,
          "device": "python",
-         "sensor": "sensor_01"
+         "sensor": "sensor_02"
         }
 }

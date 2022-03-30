@@ -1,3 +1,8 @@
 .idea/
 logs/
 profiler.txt
+
+__pycache__/
+*.py[cod]
+*$py.class
+

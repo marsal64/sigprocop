@@ -1,4 +1,4 @@
 # run SigProcOpenPython
 #
 
-/home/ml/miniconda3/envs/ml/bin/python3 sigprocoprun.py
+/home/ml/miniconda3/envs/spop/bin/python3 sigprocoprun.py
