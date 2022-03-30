@@ -12,7 +12,7 @@ ABSPATH = os.path.abspath(__file__)
 DNAME = os.path.dirname(ABSPATH)
 # move to models directory
 os.chdir(DNAME)
-os.chdir('../../models')
+os.chdir('models')
 CNAME = os.getcwd()
 
 
